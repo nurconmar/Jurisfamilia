@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JurisFamilia TS - Buscador de Jurisprudencia de Derecho de Familia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,300&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        legal: {
+                            50: '#f4f6f9',
+                            100: '#e6ebf2',
+                            700: '#1e3a8a',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            gold: '#d97706',
+                            goldLight: '#fef3c7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .doctrina-box {
+            border-left: 4px solid #d97706;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 bg-slate-50 antialiased selection:bg-amber-200 selection:text-amber-900">
+
+    <!-- Header Principal -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-amber-600 rounded-lg text-white shadow-md">
+                        <i class="fa-solid fa-scale-balanced text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white font-serif">JurisFamilia <span class="text-amber-500 font-sans font-normal text-sm px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded">TS Sala 1ª</span></h1>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-400">Jurisprudencia hito de Derecho de Familia del Tribunal Supremo de España</p>
+                    </div>
+                </div>
+
+                <!-- Botones del Header -->
+                <div class="flex items-center gap-2">
+                    <button id="btnBookmarks" onclick="toggleBookmarksTab()" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-bookmark text-amber-500"></i>
+                        <span>Guardadas</span>
+                        <span id="bookmarkCount" class="ml-1 px-1.5 py-0.5 bg-amber-500 text-slate-950 font-bold rounded-full text-xs">0</span>
+                    </button>
+                    
+                    <a href="https://www.poderjudicial.es/search/indexAN.jsp" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-medium shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span class="hidden sm:inline">Buscar en</span> CENDOJ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Subheader / Buscador y Controles -->
+    <section class="bg-slate-800 text-white py-8 border-b border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-3xl mx-auto text-center mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold font-serif mb-2 text-slate-100">Buscador Especializado en Familia</h2>
+                <p class="text-slate-300 text-xs sm:text-sm">Consulta sentencias con doctrina fijada por el Tribunal Supremo. Copia citas formateadas o accede directamente a la sentencia integra en CENDOJ.</p>
+            </div>
+
+            <!-- Input de Búsqueda -->
+            <div class="max-w-4xl mx-auto">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                    </div>
+                    <input type="text" id="searchInput" onkeyup="filterJurisprudence()" 
+                        placeholder="Buscar por ECLI, Ponente, número de STS, palabra clave (ej. 'custodia compartida', 'desequilibrio')..." 
+                        class="w-full pl-11 pr-24 py-3.5 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-inner text-sm sm:text-base">
+                    <button onclick="clearSearch()" id="btnClearSearch" class="hidden absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md transition">
+                        Limpiar
+                    </button>
+                </div>
+
+                <!-- Filtros Temáticos por Chips -->
+                <div class="mt-4 flex flex-wrap gap-2 justify-center" id="categoryChips">
+                    <!-- Dinámico vía JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Barra de Estado y Ordenación -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-200">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-600 text-sm font-medium" id="resultsCount">Cargando sentencias...</span>
+                <span id="activeFilterBadge" class="hidden px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full border border-amber-300"></span>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <label for="sortBy" class="text-xs text-slate-500 font-medium whitespace-nowrap">Ordenar por:</label>
+                <select id="sortBy" onchange="filterJurisprudence()" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-3 py-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
+                    <option value="date-desc">Fecha (Más recientes primero)</option>
+                    <option value="date-asc">Fecha (Más antiguas primero)</option>
+                    <option value="sts">Número de Sentencia</option>
+                </select>
+                
+                <button onclick="resetAllFilters()" class="text-xs text-slate-500 hover:text-slate-800 underline ml-2 whitespace-nowrap">
+                    Restablecer
+                </button>
+            </div>
+        </div>
+
+        <!-- Vista de Pestaña Guardados / Favoritos (Oculta por defecto) -->
+        <div id="bookmarksSection" class="hidden mb-8 p-4 bg-amber-50/70 border border-amber-200 rounded-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-amber-500"></i> Sentencias Guardadas en Favoritos
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="exportBookmarksText()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md font-medium transition">
+                        <i class="fa-solid fa-download mr-1"></i> Copiar Citas Guardadas
+                    </button>
+                    <button onclick="toggleBookmarksTab()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 py-1.5 rounded-md transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+            <div id="bookmarksContainer" class="grid grid-cols-1 gap-4">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Listado de Sentencias -->
+        <div id="jurisprudenceList" class="grid grid-cols-1 gap-6">
+            <!-- Las tarjetas se generan dinámicamente con JS -->
+        </div>
+
+        <!-- Estado sin resultados -->
+        <div id="noResults" class="hidden text-center py-16 px-4 bg-white rounded-xl border border-dashed border-slate-300 my-6">
+            <div class="inline-flex p-4 rounded-full bg-slate-100 text-slate-400 mb-3">
+                <i class="fa-solid fa-folder-open text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-slate-800">No se encontraron resoluciones</h3>
+            <p class="text-slate-500 text-sm mt-1 max-w-md mx-auto">Prueba ajustando los términos de búsqueda o eliminando los filtros seleccionados.</p>
+            <button onclick="resetAllFilters()" class="mt-4 px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition">
+                Ver todas las sentencias
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-10 mt-12 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center space-x-2 text-white font-bold font-serif text-base mb-3">
+                        <i class="fa-solid fa-scale-balanced text-amber-500"></i>
+                        <span>JurisFamilia TS</span>
+                    </div>
+                    <p class="text-slate-400 leading-relaxed">
+                        Herramienta de consulta rápida y recopilatorio jurisprudencial especializado en Derecho de Familia del Tribunal Supremo español (Sala Primera).
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-3 text-sm">Aviso de Fuentes Oficiales</h4>
+                    <p class="leading-relaxed">
+                        Las resoluciones del Tribunal Supremo son públicas. El texto oficial completo y fehaciente debe ser cotejado siempre en el Fondo Documental del CENDOJ (Consejo General del Poder Judicial).
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-3 text-sm">Categorías Recopiladas</h4>
+                    <ul class="space-y-1 text-slate-400">
+                        <li>• Custodia Compartida e Individual</li>
+                        <li>• Pensión Alimenticia a Menores y Mayores</li>
+                        <li>• Pensión Compensatoria (art. 97 CC)</li>
+                        <li>• Atribución del Uso de la Vivienda Familiar</li>
+                        <li>• Liquidación de Sociedad de Gananciales</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-6 border-t border-slate-800 text-center flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p>&copy; <span id="year"></span> Buscador Jurisprudencia TS Derecho de Familia. Listo para GitHub Pages.</p>
+                <div class="flex items-center gap-4">
+                    <span class="text-slate-500">Formato ECLI Oficial</span>
+                    <span class="text-slate-500">•</span>
+                    <span class="text-slate-500">Código Civil de España</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Detalle Completo de Sentencia -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white p-6 flex justify-between items-start border-b border-slate-800">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span id="modalCategory" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950">
+                            Categoría
+                        </span>
+                        <span id="modalECLI" class="text-xs font-mono text-slate-400">ECLI</span>
+                    </div>
+                    <h3 id="modalTitle" class="text-xl font-bold font-serif text-amber-400">STS 000/0000</h3>
+                    <p id="modalDate" class="text-xs text-slate-300 mt-1">Fecha de resolución</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700">
+                <div>
+                    <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-500 mb-1">Ponente</h4>
+                    <p id="modalPonente" class="font-medium text-slate-800">Excmo. Sr. D...</p>
+                </div>
+
+                <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200/80 doctrina-box">
+                    <h4 class="font-bold text-amber-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-gavel text-amber-600"></i> Doctrina Jurisprudencial Fijada
+                    </h4>
+                    <p id="modalDoctrina" class="text-slate-800 italic leading-relaxed font-serif">
+                        Contenido de la doctrina...
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-500 mb-1">Resumen del Caso y Ratio Decidendi</h4>
+                    <p id="modalResumen" class="leading-relaxed text-slate-600 whitespace-pre-line">
+                        Resumen ampliado...
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-500 mb-2">Preceptos Legales de Aplicación</h4>
+                    <div id="modalPreceptos" class="flex flex-wrap gap-1.5">
+                        <!-- Badges dinámicos -->
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h4 class="font-bold text-slate-700 text-xs mb-1">Cita Formal Jurisprudencial:</h4>
+                    <p id="modalCitaText" class="font-mono text-xs text-slate-600 select-all bg-white p-2.5 rounded border border-slate-200">
+                        STS (Sala 1ª) ...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <button id="modalCopyBtn" onclick="" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition flex items-center gap-2">
+                    <i class="fa-regular fa-copy"></i> Copiar Cita
+                </button>
+                <a id="modalCendojBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-external-link"></i> Ver Sentencia Completa en CENDOJ
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Notificación -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3">
+        <div class="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <span id="toastMessage" class="text-xs sm:text-sm font-medium">Acción completada</span>
+    </div>
+
+    <!-- Elemento oculto para copiar al portapapeles -->
+    <textarea id="hiddenCopyArea" class="sr-only" aria-hidden="true"></textarea>
+
+    <!-- JavaScript del Buscador -->
+    <script>
+        // Set dynamic current year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Categorías disponibles
+        const CATEGORIES = [
+            "Todas",
+            "Custodia compartida",
+            "Pensión alimenticia",
+            "Pensión compensatoria",
+            "Uso de vivienda",
+            "Liquidación de gananciales",
+            "Patria potestad",
+            "Modificación de medidas"
+        ];
+
+        // Base de datos de Sentencias Hito del TS - Sala 1ª (Derecho de Familia Español)
+        const DATABASE = [
+            {
+                id: "sts-257-2013",
+                stsNum: "STS 257/2013",
+                fecha: "2013-04-29",
+                fechaFormatted: "29 de abril de 2013",
+                ecli: "ECLI:ES:TS:2013:2088",
+                ponente: "Excmo. Sr. D. José Antonio Seijas Quintana",
+                categoria: "Custodia compartida",
+                resumen: "Sentencia hito decisiva que cambió el paradigma procesal de la custodia compartida en España. Modifica la interpretación del art. 92 del Código Civil, estableciendo que la guarda y custodia compartida no debe considerarse una medida excepcional, sino la alternativa habitual y deseable.",
+                doctrina: "La redacción del artículo 92 del Código Civil no permite concluir que se trate de una medida excepcional, sino que al contrario, debe considerarse la regla general y deseable cuando resulte adecuada, ya que permite que sea efectivo el derecho de los hijos a relacionarse con ambos progenitores aun en situaciones de crisis matrimonial.",
+                preceptos: ["Art. 92 CC", "Art. 39 CE", "Convención Derechos del Niño"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/40b3cb1714bc2174/20130514"
+            },
+            {
+                id: "sts-558-2020",
+                stsNum: "STS 558/2020",
+                fecha: "2020-10-26",
+                fechaFormatted: "26 de octubre de 2020",
+                ecli: "ECLI:ES:TS:2020:3490",
+                ponente: "Excmo. Sr. D. José Luis Seoane Spiegelberg",
+                categoria: "Uso de vivienda",
+                resumen: "Analiza la atribución de la vivienda familiar cuando se acuerda el régimen de custodia compartida. Fija doctrina sobre la imposibilidad de atribuir el uso indefinido de la vivienda a uno de los cónyuges cuando no existe un interés más necesitado de protección absoluto.",
+                doctrina: "En los supuestos de custodia compartida no procede la atribución indefinida del uso de la vivienda familiar al progenitor con menores recursos, siendo procedente la fijación de una limitación temporal para facilitar el tránsito a las economías separadas y evitar situaciones extintivas injustificadas.",
+                preceptos: ["Art. 96 CC", "Art. 92 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/f4a0c5c363da8fbf/20201109"
+            },
+            {
+                id: "sts-55-2016",
+                stsNum: "STS 55/2016",
+                fecha: "2016-02-12",
+                fechaFormatted: "12 de febrero de 2016",
+                ecli: "ECLI:ES:TS:2016:478",
+                ponente: "Excmo. Sr. D. Eduardo Baena Ruiz",
+                categoria: "Pensión alimenticia",
+                resumen: "Extinción de la pensión de alimentos respecto a hijo mayor de edad por falta de aprovechamiento académico relevante, pasividad e indolencia continuada no justificada.",
+                doctrina: "La pensión alimenticia de los hijos mayores de edad se extingue cuando la falta de rendimiento en los estudios o la ausencia de inserción laboral se deba a una actitud pasiva, desidia e indolencia continuada imputable exclusivamente a la propia voluntad del hijo.",
+                preceptos: ["Art. 142 CC", "Art. 152.5 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/d98b965e88863aa1/20160224"
+            },
+            {
+                id: "sts-496-2011",
+                stsNum: "STS 496/2011",
+                fecha: "2011-07-07",
+                fechaFormatted: "7 de julio de 2011",
+                ecli: "ECLI:ES:TS:2011:5115",
+                ponente: "Excma. Sra. Dª. Encarnación Roca Trías",
+                categoria: "Pensión compensatoria",
+                resumen: "Fijación de criterios para determinar si la pensión compensatoria del artículo 97 del Código Civil debe ser vitalicia o fijarse con un límite temporal de duración.",
+                doctrina: "La pensión compensatoria no es un mecanismo equilibrador de patrimonios ni una garantía de mantenimiento de nivel de vida, sino un instrumento reparador del desequilibrio sobrevenido. Su temporización exige valorar la capacidad de reinserción laboral y la edad del cónyuge beneficiario.",
+                preceptos: ["Art. 97 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/fa402e1a3bc4750c/20110722"
+            },
+            {
+                id: "sts-671-2021",
+                stsNum: "STS 671/2021",
+                fecha: "2021-10-05",
+                fechaFormatted: "5 de octubre de 2021",
+                ecli: "ECLI:ES:TS:2021:3612",
+                ponente: "Excma. Sra. Dª. María Ángeles Parra Lucán",
+                categoria: "Liquidación de gananciales",
+                resumen: "Determinación de la naturaleza (privativa o ganancial) del dinero desembolsado durante el matrimonio para el pago de la hipoteca de la vivienda adquirida antes por uno de los esposos.",
+                doctrina: "Los pagos de amortización del préstamo hipotecario abonados durante la vigencia de la sociedad de gananciales con fondos comunes para la vivienda familiar privativa devengan un derecho de reembolso a favor de la sociedad (art. 1158 CC), sin alterar la titularidad del bien salvo acuerdo explícito de aportación.",
+                preceptos: ["Art. 1357 CC", "Art. 1354 CC", "Art. 1158 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/a1b2c3d4e5f6/20211015"
+            },
+            {
+                id: "sts-40-2018",
+                stsNum: "STS 40/2018",
+                fecha: "2018-01-24",
+                fechaFormatted: "24 de enero de 2018",
+                ecli: "ECLI:ES:TS:2018:187",
+                ponente: "Excmo. Sr. D. Francisco Javier Arroyo Fiestas",
+                categoria: "Patria potestad",
+                resumen: "Privación del ejercicio de la patria potestad a progenitor por un grave y continuado incumplimiento de los deberes de velar por los hijos y desinterés afectivo extremo.",
+                doctrina: "La privación de la patria potestad es una medida grave pero necesaria para salvaguardar el interés superior del menor cuando se acredita el abandono de las funciones parentales de carácter afectivo, personal y económico de manera reiterada e injustificada.",
+                preceptos: ["Art. 170 CC", "Art. 154 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/88118811/20180205"
+            },
+            {
+                id: "sts-482-2021",
+                stsNum: "STS 482/2021",
+                fecha: "2021-07-02",
+                fechaFormatted: "2 de julio de 2021",
+                ecli: "ECLI:ES:TS:2021:2634",
+                ponente: "Excmo. Sr. D. Francisco Marín Castán",
+                categoria: "Modificación de medidas",
+                resumen: "Requisitos para la modificación de medidas de divorcio. La alteración de circunstancias debe ser sustancial, sobrevenida, imprevista y con vocación de permanencia.",
+                doctrina: "Para que progrese la pretensión de modificación de medidas acordadas en procedimiento de familia se requiere un cambio objetivo de las circunstancias económicas o personales que sea de sustancial entidad, imprevisible al dictarse la medida originaria y con permanencia en el tiempo.",
+                preceptos: ["Art. 91 CC", "Art. 775 LEC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/333444555/20210710"
+            },
+            {
+                id: "sts-15-2020",
+                stsNum: "STS 15/2020",
+                fecha: "2020-01-16",
+                fechaFormatted: "16 de enero de 2020",
+                ecli: "ECLI:ES:TS:2020:110",
+                ponente: "Excmo. Sr. D. Antonio García Martínez",
+                categoria: "Custodia compartida",
+                resumen: "Falta de relación personal estrecha o tirantez entre progenitores no constituye causa automática para denegar la custodia compartida.",
+                doctrina: "Las desavenencias o relaciones frías entre los progenitores no son por sí solas impedimento para fijar la custodia compartida, salvo que objetivamente distorsionen o afecten negativamente al desarrollo emocional e interés superior de los hijos menores.",
+                preceptos: ["Art. 92.5 CC", "Art. 92.8 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/666777888/20200125"
+            },
+            {
+                id: "sts-395-2015",
+                stsNum: "STS 395/2015",
+                fecha: "2015-07-15",
+                fechaFormatted: "15 de julio de 2015",
+                ecli: "ECLI:ES:TS:2015:3322",
+                ponente: "Excmo. Sr. D. José Antonio Seijas Quintana",
+                categoria: "Pensión alimenticia",
+                resumen: "Efectos retroactivos del devengo de la pensión de alimentos desde la fecha de interposición de la demanda procesal inicial.",
+                doctrina: "De conformidad con el artículo 148 del Código Civil, cuando se fijan los alimentos por primera vez, el pago debe retrotraerse a la fecha de la demanda de primera instancia; mientras que en los procesos de modificación se abonan desde la resolución que los acuerda.",
+                preceptos: ["Art. 148 CC", "Art. 106 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/99887766/20150728"
+            },
+            {
+                id: "sts-201-2022",
+                stsNum: "STS 201/2022",
+                fecha: "2022-03-15",
+                fechaFormatted: "15 de marzo de 2022",
+                ecli: "ECLI:ES:TS:2022:980",
+                ponente: "Excmo. Sr. D. José Luis Seoane Spiegelberg",
+                categoria: "Uso de vivienda",
+                resumen: "Atribución del uso de la vivienda familiar tras la mayoría de edad de los hijos. Cese automático del derecho de uso garantizado en el art. 96.1 CC.",
+                doctrina: "Al alcanzar los hijos la mayoría de edad cesa el derecho de uso de la vivienda familiar que les atribuía el artículo 96.1 del Código Civil, debiendo reconducirse en su caso la situación de necesidad del hijo mayor por la vía del derecho de alimentos pero sin mantener la limitación posesoria del bien.",
+                preceptos: ["Art. 96.1 CC", "Art. 93.2 CC"],
+                linkCendoj: "https://www.poderjudicial.es/search/AN/openDocument/1122334455/20220325"
+            }
+        ];
+
+        // Estado Global de la App
+        let activeCategory = "Todas";
+        let bookmarks = JSON.parse(localStorage.getItem('juris_bookmarks') || '[]');
+
+        // Inicialización
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCategoryChips();
+            filterJurisprudence();
+            updateBookmarkBadge();
+        });
+
+        // Renderizar botones de filtro temático
+        function renderCategoryChips() {
+            const container = document.getElementById('categoryChips');
+            container.innerHTML = CATEGORIES.map(cat => {
+                const isActive = cat === activeCategory;
+                const activeClasses = isActive 
+                    ? 'bg-amber-500 text-slate-950 font-semibold shadow-md' 
+                    : 'bg-slate-700/70 hover:bg-slate-700 text-slate-200 border border-slate-600';
+                return `<button onclick="setCategory('${cat}')" class="px-3 py-1.5 rounded-full text-xs transition duration-150 ${activeClasses}">
+                    ${cat}
+                </button>`;
+            }).join('');
+        }
+
+        // Establecer categoría activa
+        function setCategory(cat) {
+            activeCategory = cat;
+            renderCategoryChips();
+            filterJurisprudence();
+        }
+
+        // Motor de Búsqueda y Filtrado
+        function filterJurisprudence() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const sortBy = document.getElementById('sortBy').value;
+            const clearBtn = document.getElementById('btnClearSearch');
+
+            // Mostrar/Ocultar botón limpiar
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // Filtrar
+            let filtered = DATABASE.filter(item => {
+                // Filtro Categoría
+                const matchesCategory = (activeCategory === "Todas") || (item.categoria === activeCategory);
+                
+                // Filtro Texto
+                const searchMatch = !query || 
+                    item.stsNum.toLowerCase().includes(query) ||
+                    item.ecli.toLowerCase().includes(query) ||
+                    item.ponente.toLowerCase().includes(query) ||
+                    item.doctrina.toLowerCase().includes(query) ||
+                    item.resumen.toLowerCase().includes(query) ||
+                    item.categoria.toLowerCase().includes(query) ||
+                    item.preceptos.some(p => p.toLowerCase().includes(query));
+
+                return matchesCategory && searchMatch;
+            });
+
+            // Ordenación
+            filtered.sort((a, b) => {
+                if (sortBy === 'date-desc') {
+                    return new Date(b.fecha) - new Date(a.fecha);
+                } else if (sortBy === 'date-asc') {
+                    return new Date(a.fecha) - new Date(b.fecha);
+                } else if (sortBy === 'sts') {
+                    return a.stsNum.localeCompare(b.stsNum);
+                }
+                return 0;
+            });
+
+            // Actualizar interfaz
+            renderList(filtered);
+            updateStatusHeader(filtered.length);
+        }
+
+        // Renderizar tarjetas en pantalla
+        function renderList(items) {
+            const container = document.getElementById('jurisprudenceList');
+            const noResults = document.getElementById('noResults');
+
+            if (items.length === 0) {
+                container.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+            
+            container.innerHTML = items.map(item => {
+                const isBookmarked = bookmarks.includes(item.id);
+                const citationText = generateCitation(item);
+
+                return `
+                <article class="bg-white rounded-xl border border-slate-200/90 shadow-sm hover:shadow-md transition duration-200 overflow-hidden">
+                    <div class="p-5 sm:p-6">
+                        
+                        <!-- Top Meta Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                    <i class="fa-solid fa-folder text-amber-600 mr-1.5"></i>${item.categoria}
+                                </span>
+                                <span class="text-xs font-mono bg-slate-50 text-slate-500 px-2 py-0.5 rounded border border-slate-200">
+                                    ${item.ecli}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleBookmark('${item.id}')" title="${isBookmarked ? 'Quitar de guardados' : 'Guardar sentencia'}" 
+                                    class="p-2 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-50 transition">
+                                    <i class="${isBookmarked ? 'fa-solid text-amber-500' : 'fa-regular'} fa-bookmark text-base"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Titulo y Ponente -->
+                        <div class="mb-4">
+                            <h3 onclick="openModal('${item.id}')" class="text-xl font-bold font-serif text-slate-900 hover:text-amber-600 cursor-pointer transition flex items-center gap-2">
+                                <span>${item.stsNum}</span>
+                                <span class="text-sm font-sans font-normal text-slate-500">• ${item.fechaFormatted}</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-1">
+                                <span class="font-medium text-slate-700">Ponente:</span> ${item.ponente}
+                            </p>
+                        </div>
+
+                        <!-- Doctrina Fijada Callout -->
+                        <div class="p-4 bg-amber-50/70 rounded-xl border-l-4 border-amber-500 mb-4">
+                            <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left text-amber-600"></i> Doctrina Jurisprudencial
+                            </h4>
+                            <p class="text-sm text-slate-800 italic font-serif leading-relaxed line-clamp-3">
+                                "${item.doctrina}"
+                            </p>
+                        </div>
+
+                        <!-- Resumen Breve -->
+                        <p class="text-xs sm:text-sm text-slate-600 mb-4 leading-relaxed line-clamp-2">
+                            ${item.resumen}
+                        </p>
+
+                        <!-- Preceptos legales -->
+                        <div class="flex flex-wrap items-center gap-1.5 mb-5">
+                            <span class="text-xs text-slate-400 mr-1">Aplicación:</span>
+                            ${item.preceptos.map(p => `<span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">${p}</span>`).join('')}
+                        </div>
+
+                        <!-- Acciones / Botones -->
+                        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                            <button onclick="openModal('${item.id}')" class="text-xs font-semibold text-slate-700 hover:text-amber-600 flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-circle-info"></i> Ver detalle completo
+                            </button>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="copyToClipboard('${escapeQuotes(citationText)}', 'Cita legal copiada al portapapeles')" 
+                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Copiar Cita
+                                </button>
+                                
+                                <a href="${item.linkCendoj}" target="_blank" rel="noopener noreferrer" 
+                                    class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium shadow-sm transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> CENDOJ
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </article>
+                `;
+            }).join('');
+        }
+
+        // Generar formato formal de Cita Jurisprudencial
+        function generateCitation(item) {
+            return `STS (Sala 1ª) ${item.stsNum.replace('STS ', '')}, de ${item.fechaFormatted} (${item.ecli}). Ponente: ${item.ponente}.`;
+        }
+
+        // Actualizar barra de conteo
+        function updateStatusHeader(count) {
+            const countLabel = document.getElementById('resultsCount');
+            const badge = document.getElementById('activeFilterBadge');
+
+            countLabel.textContent = `${count} ${count === 1 ? 'resolución encontrada' : 'resoluciones encontradas'}`;
+
+            if (activeCategory !== "Todas") {
+                badge.textContent = `Categoría: ${activeCategory}`;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Manejo de Modal Detalle
+        function openModal(id) {
+            const item = DATABASE.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('modalCategory').textContent = item.categoria;
+            document.getElementById('modalECLI').textContent = item.ecli;
+            document.getElementById('modalTitle').textContent = `${item.stsNum} - ${item.fechaFormatted}`;
+            document.getElementById('modalDate').textContent = `Resolución de la Sala 1ª (Civil) del Tribunal Supremo`;
+            document.getElementById('modalPonente').textContent = item.ponente;
+            document.getElementById('modalDoctrina').textContent = `"${item.doctrina}"`;
+            document.getElementById('modalResumen').textContent = item.resumen;
+
+            // Preceptos
+            const preceptosContainer = document.getElementById('modalPreceptos');
+            preceptosContainer.innerHTML = item.preceptos.map(p => 
+                `<span class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-medium text-xs border border-amber-200">${p}</span>`
+            ).join('');
+
+            // Cita
+            const citation = generateCitation(item);
+            document.getElementById('modalCitaText').textContent = citation;
+
+            // Botones Modal
+            document.getElementById('modalCopyBtn').setAttribute('onclick', `copyToClipboard('${escapeQuotes(citation)}', 'Cita copiada')`);
+            document.getElementById('modalCendojBtn').setAttribute('href', item.linkCendoj);
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Favoritos / Bookmarks (LocalStorage)
+        function toggleBookmark(id) {
+            const index = bookmarks.indexOf(id);
+            if (index > -1) {
+                bookmarks.splice(index, 1);
+                showToast("Sentencia eliminada de guardados");
+            } else {
+                bookmarks.push(id);
+                showToast("Sentencia guardada en favoritos");
+            }
+            localStorage.setItem('juris_bookmarks', JSON.stringify(bookmarks));
+            updateBookmarkBadge();
+            filterJurisprudence();
+            if (!document.getElementById('bookmarksSection').classList.contains('hidden')) {
+                renderBookmarksList();
+            }
+        }
+
+        function updateBookmarkBadge() {
+            document.getElementById('bookmarkCount').textContent = bookmarks.length;
+        }
+
+        function toggleBookmarksTab() {
+            const section = document.getElementById('bookmarksSection');
+            if (section.classList.contains('hidden')) {
+                renderBookmarksList();
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        function renderBookmarksList() {
+            const container = document.getElementById('bookmarksContainer');
+            if (bookmarks.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-2">No tienes sentencias guardadas aún. Haz clic en el icono del marcapáginas en cualquier sentencia para agregarla.</p>`;
+                return;
+            }
+
+            const bookmarkedItems = DATABASE.filter(item => bookmarks.includes(item.id));
+            container.innerHTML = bookmarkedItems.map(item => `
+                <div class="bg-white p-3.5 rounded-lg border border-amber-200 shadow-sm flex items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-bold font-serif text-slate-900">${item.stsNum} (${item.fechaFormatted})</span>
+                        <span class="text-xs text-slate-500 ml-2">• ${item.categoria}</span>
+                        <p class="text-xs text-slate-600 line-clamp-1 mt-0.5">${item.doctrina}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyToClipboard('${escapeQuotes(generateCitation(item))}', 'Cita copiada')" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-700">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                        <button onclick="toggleBookmark('${item.id}')" class="p-1.5 bg-red-50 hover:bg-red-100 rounded text-xs text-red-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportBookmarksText() {
+            if (bookmarks.length === 0) {
+                showToast("No hay sentencias guardadas para exportar");
+                return;
+            }
+            const bookmarkedItems = DATABASE.filter(item => bookmarks.includes(item.id));
+            const text = bookmarkedItems.map(item => generateCitation(item)).join('\n\n');
+            copyToClipboard(text, "Todas las citas guardadas fueron copiadas");
+        }
+
+        // Función de Limpiar Búsqueda
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filterJurisprudence();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('searchInput').value = '';
+            activeCategory = "Todas";
+            document.getElementById('sortBy').value = "date-desc";
+            renderCategoryChips();
+            filterJurisprudence();
+        }
+
+        // Copiar texto compatible de forma segura sin alert()
+        function copyToClipboard(text, successMsg) {
+            const textArea = document.getElementById('hiddenCopyArea');
+            textArea.value = text;
+            textArea.select();
+            textArea.setSelectionRange(0, 99999); // Móviles
+
+            try {
+                document.execCommand('copy');
+                showToast(successMsg || "Texto copiado al portapapeles");
+            } catch (err) {
+                showToast("Error al copiar texto");
+            }
+        }
+
+        // Notificación Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMessage');
+            
+            msgEl.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Auxiliar escapar comillas
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
